@@ -33,7 +33,8 @@ public class TableSearcherTest
         ((DefaultTableModel) table.getModel()).setDataVector(dataVector, dataVector[0]);
 
         TableSearcher searcher = new TableSearcher(table);
+        final int[] rowIndex = searcher.lookFor(searchItem);
 
-        Assert.assertArrayEquals(new int[] {1}, );
+        Assert.assertNotNull(rowIndex);
     }
 }
