@@ -41,8 +41,15 @@ public class VisualizationState
     private boolean whatIfAnalysisActive;
     private ITableRowFilter tableRowFilter;
 
-    private float linkWidthFactor;
-    private float nodeSizeFactor;
+    private List<Double> linkUtilizationColorThresholdList;
+    private List<Double> linkRunoutTimeColorThresholdList;
+    private List<Double> linkCapacityThicknessThresholdList;
+    private boolean isActiveLinkUtilizationColorThresholdList;
+    private boolean isActiveLinkRunoutTimeColorThresholdList;
+    private boolean isActiveLinkCapacityThicknessThresholdList;
+    
+    private float linkWidthIncreaseFactorRespectToDefault;
+    private float nodeSizeFactorRespectToDefault;
 
     private boolean showInCanvasNonConnectedNodes;
     private int interLayerSpaceInPixels;
@@ -80,9 +87,15 @@ public class VisualizationState
         this.linksToHideInCanvasAsMandatedByUserInTable = new HashSet<>();
         this.interLayerSpaceInPixels = 50;
         this.tableRowFilter = null;
+        this.linkUtilizationColorThresholdList = new ArrayList<> (VisualizationConstants.DEFAULT_LINKCOLORINGUTILIZATIONTHRESHOLDS);
+        this.linkCapacityThicknessThresholdList = new ArrayList<> (VisualizationConstants.DEFAULT_LINKTHICKNESSTHRESHPOLDS);
+        this.linkRunoutTimeColorThresholdList = new ArrayList<> (VisualizationConstants.DEFAULT_LINKCOLORINGRUNOUTTHRESHOLDS);
+        this.isActiveLinkUtilizationColorThresholdList = true;
+        this.isActiveLinkRunoutTimeColorThresholdList = false;
+        this.isActiveLinkCapacityThicknessThresholdList = true;
 
-        this.linkWidthFactor = 1;
-        this.nodeSizeFactor = 1;
+        this.linkWidthIncreaseFactorRespectToDefault = 1;
+        this.nodeSizeFactorRespectToDefault = 1;
 
         this.pickManager = new PickManager(this);
 
@@ -438,7 +451,7 @@ public class VisualizationState
             for (int trueVisualizationOrderIndex = 0; trueVisualizationOrderIndex < cache_mapCanvasVisibleLayer2VisualizationOrderRemovingNonVisible.size(); trueVisualizationOrderIndex++)
             {
                 final NetworkLayer newLayer = cache_mapCanvasVisibleLayer2VisualizationOrderRemovingNonVisible.inverseBidiMap().get(trueVisualizationOrderIndex);
-                final double iconHeightIfNotActive = nodeSizeFactor * (getNetPlan().getNumberOfNodes() > 100 ? VisualizationConstants.DEFAULT_GUINODE_SHAPESIZE_MORETHAN100NODES : VisualizationConstants.DEFAULT_GUINODE_SHAPESIZE);
+                final double iconHeightIfNotActive = nodeSizeFactorRespectToDefault * (getNetPlan().getNumberOfNodes() > 100 ? VisualizationConstants.DEFAULT_GUINODE_SHAPESIZE_MORETHAN100NODES : VisualizationConstants.DEFAULT_GUINODE_SHAPESIZE);
                 final GUINode gn = new GUINode(n, newLayer, iconHeightIfNotActive);
                 guiNodesThisNode.add(gn);
                 if (trueVisualizationOrderIndex > 0)
@@ -446,12 +459,12 @@ public class VisualizationState
                     final GUINode lowerLayerGNode = guiNodesThisNode.get(trueVisualizationOrderIndex - 1);
                     final GUINode upperLayerGNode = guiNodesThisNode.get(trueVisualizationOrderIndex);
                     if (upperLayerGNode != gn) throw new RuntimeException();
-                    final GUILink glLowerToUpper = new GUILink(null, lowerLayerGNode, gn,
-                            VisualizationUtils.resizedBasicStroke(VisualizationConstants.DEFAULT_INTRANODEGUILINK_EDGESTROKE, linkWidthFactor),
-                            VisualizationUtils.resizedBasicStroke(VisualizationConstants.DEFAULT_INTRANODEGUILINK_EDGESTROKE, linkWidthFactor));
-                    final GUILink glUpperToLower = new GUILink(null, gn, lowerLayerGNode,
-                            VisualizationUtils.resizedBasicStroke(VisualizationConstants.DEFAULT_INTRANODEGUILINK_EDGESTROKE, linkWidthFactor),
-                            VisualizationUtils.resizedBasicStroke(VisualizationConstants.DEFAULT_INTRANODEGUILINK_EDGESTROKE, linkWidthFactor));
+                    final GUILink glLowerToUpper = new GUILink(this , null, lowerLayerGNode, gn,
+                            VisualizationUtils.resizedBasicStroke(VisualizationConstants.DEFAULT_INTRANODEGUILINK_EDGESTROKE, linkWidthIncreaseFactorRespectToDefault),
+                            VisualizationUtils.resizedBasicStroke(VisualizationConstants.DEFAULT_INTRANODEGUILINK_EDGESTROKE, linkWidthIncreaseFactorRespectToDefault));
+                    final GUILink glUpperToLower = new GUILink(this , null, gn, lowerLayerGNode,
+                            VisualizationUtils.resizedBasicStroke(VisualizationConstants.DEFAULT_INTRANODEGUILINK_EDGESTROKE, linkWidthIncreaseFactorRespectToDefault),
+                            VisualizationUtils.resizedBasicStroke(VisualizationConstants.DEFAULT_INTRANODEGUILINK_EDGESTROKE, linkWidthIncreaseFactorRespectToDefault));
                     intraNodeGUILinksThisNode.add(glLowerToUpper);
                     intraNodeGUILinksThisNode.add(glUpperToLower);
                     thisNodeInterLayerLinksInfoMap.put(Pair.of(trueVisualizationOrderIndex - 1, trueVisualizationOrderIndex), glLowerToUpper);
@@ -466,9 +479,9 @@ public class VisualizationState
             {
                 final GUINode gn1 = cache_mapNode2ListVerticallyStackedGUINodes.get(e.getOriginNode()).get(trueVisualizationOrderIndex);
                 final GUINode gn2 = cache_mapNode2ListVerticallyStackedGUINodes.get(e.getDestinationNode()).get(trueVisualizationOrderIndex);
-                final GUILink gl1 = new GUILink(e, gn1, gn2,
-                        VisualizationUtils.resizedBasicStroke(VisualizationConstants.DEFAULT_REGGUILINK_EDGESTROKE_ACTIVELAYER, linkWidthFactor),
-                        VisualizationUtils.resizedBasicStroke(VisualizationConstants.DEFAULT_REGGUILINK_EDGESTROKE, linkWidthFactor));
+                final GUILink gl1 = new GUILink(this , e, gn1, gn2,
+                        VisualizationUtils.resizedBasicStroke(VisualizationConstants.DEFAULT_REGGUILINK_EDGESTROKE_ACTIVELAYER, linkWidthIncreaseFactorRespectToDefault),
+                        VisualizationUtils.resizedBasicStroke(VisualizationConstants.DEFAULT_REGGUILINK_EDGESTROKE, linkWidthIncreaseFactorRespectToDefault));
                 cache_canvasRegularLinkMap.put(e, gl1);
             }
         }
@@ -490,14 +503,14 @@ public class VisualizationState
 
     public void decreaseCanvasNodeSizeAll()
     {
-        nodeSizeFactor *= VisualizationConstants.SCALE_OUT;
+        nodeSizeFactorRespectToDefault *= VisualizationConstants.SCALE_OUT;
         for (GUINode gn : getCanvasAllGUINodes())
             gn.setIconHeightInNonActiveLayer(gn.getIconHeightInNotActiveLayer() * VisualizationConstants.SCALE_OUT);
     }
 
     public void increaseCanvasNodeSizeAll()
     {
-        nodeSizeFactor *= VisualizationConstants.SCALE_IN;
+        nodeSizeFactorRespectToDefault *= VisualizationConstants.SCALE_IN;
         for (GUINode gn : getCanvasAllGUINodes())
             gn.setIconHeightInNonActiveLayer(gn.getIconHeightInNotActiveLayer() * VisualizationConstants.SCALE_IN);
     }
@@ -505,7 +518,7 @@ public class VisualizationState
     public void decreaseCanvasLinkSizeAll()
     {
         final float multFactor = VisualizationConstants.SCALE_OUT;
-        linkWidthFactor *= multFactor;
+        linkWidthIncreaseFactorRespectToDefault *= multFactor;
         for (GUILink e : getCanvasAllGUILinks(true, true))
             e.setEdgeStroke(VisualizationUtils.resizedBasicStroke(e.getStrokeIfActiveLayer(), multFactor), VisualizationUtils.resizedBasicStroke(e.getStrokeIfNotActiveLayer(), multFactor));
     }
@@ -513,7 +526,7 @@ public class VisualizationState
     public void increaseCanvasLinkSizeAll()
     {
         final float multFactor = VisualizationConstants.SCALE_IN;
-        linkWidthFactor *= multFactor;
+        linkWidthIncreaseFactorRespectToDefault *= multFactor;
         for (GUILink e : getCanvasAllGUILinks(true, true))
             e.setEdgeStroke(VisualizationUtils.resizedBasicStroke(e.getStrokeIfActiveLayer(), multFactor), VisualizationUtils.resizedBasicStroke(e.getStrokeIfNotActiveLayer(), multFactor));
     }
@@ -793,6 +806,59 @@ public class VisualizationState
     }
 
 
+    /* Changes */
+    public List<Double> getLinkUtilizationColor()
+    {
+        return linkUtilizationColorThresholdList;
+    }
+    
+    public List<Double> getLinkRunoutTimeColor()
+    {
+        return linkRunoutTimeColorThresholdList;
+    }
+    
+    public List<Double> getLinkCapacityThickness()
+    {
+        return linkCapacityThicknessThresholdList;
+    }
+        
+    public void setIsActiveLinkUtilizationColorThresholdList(boolean isActive) { this.isActiveLinkUtilizationColorThresholdList = isActive; }
+    public void setIsActiveLinkRunoutTimeColorThresholdList(boolean isActive) { this.isActiveLinkRunoutTimeColorThresholdList = isActive; }
+    public void setIsActiveLinkCapacityThicknessThresholdList(boolean isActive) { this.isActiveLinkCapacityThicknessThresholdList = isActive; }
+    public boolean getIsActiveLinkUtilizationColorThresholdList() { return isActiveLinkUtilizationColorThresholdList; }
+    public boolean getIsActiveLinkRunoutTimeColorThresholdList() { return isActiveLinkRunoutTimeColorThresholdList; }
+    public boolean getIsActiveLinkCapacityThicknessThresholdList() { return isActiveLinkCapacityThicknessThresholdList; }
+
+    public void setLinkUtilizationColor(List<Double> linkUtilizationColorList)
+    {
+        this.linkUtilizationColorThresholdList = linkUtilizationColorList;
+    }
+    
+    public void setLinkRunoutTimeColor(List<Double> linkRunoutTimeColor)
+    {
+        this.linkRunoutTimeColorThresholdList = linkRunoutTimeColor;
+    }
+    public void setLinkCapacityThickness(List<Double> linkCapacityThickness)
+    {
+        this.linkCapacityThicknessThresholdList = linkCapacityThickness;
+    }
+    public Color getLinkColorAccordingToUtilization (double linkUtilization)
+    {
+        linkUtilization*=100;
+        
+        for(int i = 0; i < this.linkUtilizationColorThresholdList.size(); i++)
+            if(linkUtilization < this.linkUtilizationColorThresholdList.get(i))
+                return VisualizationConstants.DEFAULT_LINKCOLORSPERUTILIZATIONANDRUNOUT.get(i);    
+        
+        return VisualizationConstants.DEFAULT_LINKCOLORSPERUTILIZATIONANDRUNOUT.get(this.linkUtilizationColorThresholdList.size());
+    }
+    public double getLinkRelativeThicknessAccordingToCapacity (double linkCapacity)
+    {
+        for(int i = 0; i < this.linkCapacityThicknessThresholdList.size(); i++)
+            if(linkCapacity < this.linkCapacityThicknessThresholdList.get(i)) return VisualizationConstants.DEFAULT_LINKRELATIVETHICKNESSVALUES.get(i);
+        return VisualizationConstants.DEFAULT_LINKRELATIVETHICKNESSVALUES.get(this.linkCapacityThicknessThresholdList.size());
+    }
+    
     /**
      * @param showUpperLayerPropagation the showUpperLayerPropagation to set
      */
@@ -968,11 +1034,11 @@ public class VisualizationState
 
     float getLinkWidthFactor()
     {
-        return linkWidthFactor;
+        return linkWidthIncreaseFactorRespectToDefault;
     }
 
-    float getNodeSizeFactor()
+    float getNodeSizeFactorRespectToDefault()
     {
-        return nodeSizeFactor;
+        return nodeSizeFactorRespectToDefault;
     }
 }

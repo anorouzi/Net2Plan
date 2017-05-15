@@ -784,18 +784,6 @@ public abstract class AdvancedJTable_networkElement extends AdvancedJTable
         ExcelWriter.writeToFile(file, this.getTabName(), buildData());
     }
 
-    protected static void updateRowSum(Object[] data, double[] aggreg, int index, double val)
-    {
-        data[index] = val;
-        aggreg[index] += val;
-    }
-
-    protected static void updateRowMax(Object[] data, double[] aggreg, int index, double val)
-    {
-        data[index] = val;
-        aggreg[index] = Math.max(val, aggreg[index]);
-    }
-
     private Object[][] buildData()
     {
         final int fixedColumnCount = fixedTable.getColumnCount();
@@ -873,49 +861,20 @@ public abstract class AdvancedJTable_networkElement extends AdvancedJTable
 
                 if (SwingUtilities.isLeftMouseButton(e))
                 {
-                    if (selection.isEmpty())
-                        callback.resetPickedStateAndUpdateView();
+                    if (e.getClickCount() == 1)
+                    {
+                        if (selection.isEmpty())
+                            callback.resetPickedStateAndUpdateView();
+                    } else if (e.getClickCount() >= 2)
+                    {
+                        SwingUtilities.invokeLater(() -> pickSelection(selection));
+                    }
                 }
             } catch (Exception ex)
             {
                 ErrorHandling.showErrorDialog("The GUI has suffered a problem.\nPlease see the console for more information.", "Error");
                 ex.printStackTrace();
             }
-        }
-    }
-
-    public static class LastRowAggregatedValue
-    {
-        private String value;
-
-        public LastRowAggregatedValue()
-        {
-            value = "---";
-        }
-
-        public LastRowAggregatedValue(int val)
-        {
-            value = "" + val;
-        }
-
-        public LastRowAggregatedValue(double val)
-        {
-            value = String.format("%.2f", val);
-        }
-
-        public LastRowAggregatedValue(String value)
-        {
-            this.value = value;
-        }
-
-        String getValue()
-        {
-            return value;
-        }
-
-        public String toString()
-        {
-            return value;
         }
     }
 

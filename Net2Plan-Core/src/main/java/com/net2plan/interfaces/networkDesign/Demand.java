@@ -732,13 +732,15 @@ public class Demand extends NetworkElement
 				e.cache_occupiedCapacity -= x_deOccup; 
 			}
 		}
+		layer.cache_nodePairDemandsThisLayer.get(Pair.of(ingressNode, egressNode)).remove(this);
+
         for (String tag : tags) netPlan.cache_taggedElements.get(tag).remove(this);
 		netPlan.cache_id2DemandMap.remove(id);
 		NetPlan.removeNetworkElementAndShiftIndexes (layer.demands , index);
 		ingressNode.cache_nodeOutgoingDemands.remove (this);
 		egressNode.cache_nodeIncomingDemands.remove (this);
 		if (ErrorHandling.isDebugEnabled()) netPlan.checkCachesConsistency();
-		removeIdAndFromPlanningDomain();
+		removeId();
 	}
 	
 	/**
@@ -944,19 +946,5 @@ public class Demand extends NetworkElement
 	}
 
 
-	Set<NetworkElement> getNetworkElementsDirConnectedForcedToHaveCommonPlanningDomain ()
-	{
-		final Set<NetworkElement> res = new HashSet<> ();
-		res.add(ingressNode);
-		res.add(egressNode);
-		res.addAll(cache_routes);
-		if (coupledUpperLayerLink != null) res.add(coupledUpperLayerLink);
-		res.addAll(cacheHbH_frs.keySet());
-		res.addAll(cacheHbH_normCarriedOccupiedPerLinkCurrentState.keySet());
-		res.addAll(cacheHbH_linksPerNodeWithNonZeroFr.keySet());
-		cacheHbH_linksPerNodeWithNonZeroFr.values().stream().flatMap(e->e.stream()).forEach(e->res.add(e));
-		return res;
-	}
-	
 
 }

@@ -206,6 +206,7 @@ public class TopologyPanel extends JPanel
         {
             throw new RuntimeException(e);
         }
+
     }
 
     /**
