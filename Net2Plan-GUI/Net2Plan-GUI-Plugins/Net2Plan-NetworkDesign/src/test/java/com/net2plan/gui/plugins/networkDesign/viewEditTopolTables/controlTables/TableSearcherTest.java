@@ -3,10 +3,14 @@ package com.net2plan.gui.plugins.networkDesign.viewEditTopolTables.controlTables
 import com.net2plan.gui.utils.AdvancedJTable;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import org.apache.commons.lang.ArrayUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import javax.swing.table.DefaultTableModel;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Jorge San Emeterio
@@ -15,7 +19,6 @@ import javax.swing.table.DefaultTableModel;
 @RunWith(JUnitParamsRunner.class)
 public class TableSearcherTest
 {
-    
     @Test
     @Parameters({"A", "Z", "O"})
     public void searchForItemTest(String searchItem)
@@ -34,6 +37,9 @@ public class TableSearcherTest
         TableSearcher searcher = new TableSearcher(table);
         final int[] rowIndex = searcher.lookFor(searchItem);
 
-        Assert.assertNotNull(rowIndex);
+        assertNotNull(rowIndex);
+
+        for (int i : rowIndex)
+            assertTrue(ArrayUtils.contains(dataVector[i], searchItem));
     }
 }
