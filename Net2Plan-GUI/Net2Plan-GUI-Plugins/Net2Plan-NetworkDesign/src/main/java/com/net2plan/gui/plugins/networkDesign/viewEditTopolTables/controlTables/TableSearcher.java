@@ -27,6 +27,8 @@ public class TableSearcher
 
     public int[] lookFor(String item)
     {
-        return null;
+        if (item == null) return new int[0];
+
+        return new int[0];
     }
 }
