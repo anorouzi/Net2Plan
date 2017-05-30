@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Pablo Pavon Mariño.
+ * Copyright (c) 2017 Pablo Pavon Marino and others.
  * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser Public License v2.1
+ * are made available under the terms of the 2-clause BSD License 
  * which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
+ * https://opensource.org/licenses/BSD-2-Clause
+ *
  * Contributors:
- * Pablo Pavon Mariño - initial API and implementation
- ******************************************************************************/
+ *     Pablo Pavon Marino and others - initial API and implementation
+ *******************************************************************************/
 
 
 package com.net2plan.gui.plugins.networkDesign.viewEditTopolTables.controlTables.specificTables;
@@ -130,7 +130,7 @@ public class AdvancedJTable_link extends AdvancedJTable_networkElement
             linkData[COLUMN_PROPSPEED] = link.getPropagationSpeedInKmPerSecond();
             linkData[COLUMN_PROPDELAYMS] = link.getPropagationDelayInMs();
             linkData[COLUMN_NUMROUTES] = !link.getLayer().isSourceRouting() ? 0 : link.getNumberOfTraversingRoutes();
-            linkData[COLUMN_NUMBACKUPROUTES] = link.getNumberOfTraversingBackupRoutes();
+            linkData[COLUMN_NUMBACKUPROUTES] = !link.getLayer().isSourceRouting() ? 0 : link.getNumberOfTraversingBackupRoutes();
             linkData[COLUMN_NUMFORWRULES] = link.getLayer().isSourceRouting() ? 0 : link.getNumberOfForwardingRules();
             linkData[COLUMN_NUMTREES] = link.getNumberOfTraversingTrees();
             linkData[COLUMN_SRGS] = srgIds_thisLink.size();
@@ -325,21 +325,12 @@ public class AdvancedJTable_link extends AdvancedJTable_networkElement
                             if (vs.isWhatIfAnalysisActive())
                             {
                                 final WhatIfAnalysisPane whatIfPane = callback.getWhatIfAnalysisPane();
-                                synchronized (whatIfPane)
-                                {
-                                    whatIfPane.whatIfLinkNodesFailureStateChanged(null, null, isLinkUp ? Sets.newHashSet(link) : null, isLinkUp ? null : Sets.newHashSet(link));
-                                    if (whatIfPane.getLastWhatIfExecutionException() != null)
-                                        throw whatIfPane.getLastWhatIfExecutionException();
-                                    whatIfPane.wait(); // wait until the simulation ends
-                                    if (whatIfPane.getLastWhatIfExecutionException() != null)
-                                        throw whatIfPane.getLastWhatIfExecutionException();
-
-                                    final VisualizationState vs = callback.getVisualizationState();
-                                    Pair<BidiMap<NetworkLayer, Integer>, Map<NetworkLayer, Boolean>> res =
-                                            vs.suggestCanvasUpdatedVisualizationLayerInfoForNewDesign(new HashSet<>(callback.getDesign().getNetworkLayers()));
-                                    vs.setCanvasLayerVisibilityAndOrder(callback.getDesign(), res.getFirst(), res.getSecond());
-                                    callback.updateVisualizationAfterNewTopology();
-                                }
+                                whatIfPane.whatIfLinkNodesFailureStateChanged(null, null, isLinkUp ? Sets.newHashSet(link) : null, isLinkUp ? null : Sets.newHashSet(link));
+                                final VisualizationState vs = callback.getVisualizationState();
+                                Pair<BidiMap<NetworkLayer, Integer>, Map<NetworkLayer, Boolean>> res =
+                                        vs.suggestCanvasUpdatedVisualizationLayerInfoForNewDesign(new HashSet<>(callback.getDesign().getNetworkLayers()));
+                                vs.setCanvasLayerVisibilityAndOrder(callback.getDesign(), res.getFirst(), res.getSecond());
+                                callback.updateVisualizationAfterNewTopology();
                             } else
                             {
                                 link.setFailureState(isLinkUp);

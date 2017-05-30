@@ -1,19 +1,20 @@
 /*******************************************************************************
- * Copyright (c) 2015 Pablo Pavon MariÃ±o.
+ * Copyright (c) 2017 Pablo Pavon Marino and others.
  * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser Public License v2.1
+ * are made available under the terms of the 2-clause BSD License
  * which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
+ * https://opensource.org/licenses/BSD-2-Clause
+ *
  * Contributors:
- * Pablo Pavon MariÃ±o - initial API and implementation
- ******************************************************************************/
+ *     Pablo Pavon Marino and others - initial API and implementation
+ *******************************************************************************/
 
 
 package com.net2plan.gui.plugins.networkDesign.topologyPane;
 
 import com.net2plan.gui.plugins.networkDesign.visualizationControl.VisualizationConstants;
 import com.net2plan.gui.plugins.networkDesign.visualizationControl.VisualizationState;
+import com.net2plan.gui.utils.JNumberField;
 import com.net2plan.internal.ErrorHandling;
 import com.net2plan.utils.SwingUtils;
 
@@ -53,14 +54,11 @@ public final class LinkStyleSelector extends JDialog implements ActionListener
 //        tabbedPane.addTab("Link relative thickness", getLinkThicknessPanel());
 
         this.add(tabbedPane, BorderLayout.CENTER);
-        this.pack();
 
         SwingUtils.configureCloseDialogOnEscape(this);
         this.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
-        this.setSize(475, 525);
-        this.setLocationRelativeTo(null);
-        this.setResizable(true);
-        this.setVisible(true);
+        this.pack();
+        this.setResizable(false);
     }
 
     @Override
@@ -75,13 +73,13 @@ public final class LinkStyleSelector extends JDialog implements ActionListener
         if (linkUtilizationColor.size() != VisualizationConstants.DEFAULT_LINKCOLORINGUTILIZATIONTHRESHOLDS.size())
             throw new RuntimeException();
 
-        //Create JTextField array
-        JTextField[] fieldArray = new JTextField[linkUtilizationColor.size()];
-
+        //Create JNumberField array
+        JNumberField[] fieldArray = new JNumberField[linkUtilizationColor.size()];
+        double minValue = 0;
+        double maxValue = 0;
         for (int i = 0; i < fieldArray.length; i++)
         {
-            fieldArray[i] = new JTextField("" + linkUtilizationColor.get(i));
-            fieldArray[i].setHorizontalAlignment(SwingConstants.RIGHT);
+            fieldArray[i] = new JNumberField(linkUtilizationColor.get(i), 0, 100, 1);
         }
 
         Rectangle[] rectangleArray = new Rectangle[VisualizationConstants.DEFAULT_LINKCOLORSPERUTILIZATIONANDRUNOUT.size()];
@@ -113,11 +111,11 @@ public final class LinkStyleSelector extends JDialog implements ActionListener
                 {
                     double value = -1;
 
-                    if (fieldArray[i].getText().matches("[0-9]+\\.*[0-9]*"))
+                    if (fieldArray[i].getValue().toString().matches("[0-9]+\\.*[0-9]*"))
                     {
                         try
                         {
-                            value = Double.parseDouble(fieldArray[i].getText());
+                            value = (fieldArray[i].getValue());
                         } catch (NumberFormatException nfe)
                         {
                         }
@@ -127,11 +125,11 @@ public final class LinkStyleSelector extends JDialog implements ActionListener
 
                     if (i == linkUtilizationColor.size() - 1)
                         previousValue = 100;
-                    else if (fieldArray[i + 1].getText().matches("[0-9]+\\.*[0-9]*"))
+                    else if (fieldArray[i + 1].getValue().toString().matches("[0-9]+\\.*[0-9]*"))
                     {
                         try
                         {
-                            previousValue = Double.parseDouble(fieldArray[i + 1].getText());
+                            previousValue = Double.parseDouble(fieldArray[i + 1].getValue().toString());
                         } catch (NumberFormatException nfe)
                         {
                         }
@@ -141,13 +139,13 @@ public final class LinkStyleSelector extends JDialog implements ActionListener
                     {
                         if (previousValue != -1 && value >= previousValue)
                         {
-                            fieldArray[i].setBackground(_errorBackgroundColor);
+                            fieldArray[i].setColor(_errorBackgroundColor);
                             isValid = false;
                         } else
-                            fieldArray[i].setBackground(Color.WHITE);
+                            fieldArray[i].setColor(Color.WHITE);
                     } else
                     {
-                        fieldArray[i].setBackground(_errorBackgroundColor);
+                        fieldArray[i].setColor(_errorBackgroundColor);
                         isValid = false;
                     }
                 }
@@ -155,7 +153,7 @@ public final class LinkStyleSelector extends JDialog implements ActionListener
                 if (isValid)
                 {
                     for (int i = 0; i < linkUtilizationColor.size(); i++)
-                        linkUtilizationColor.set(i, Double.parseDouble(fieldArray[i].getText()));
+                        linkUtilizationColor.set(i, Double.parseDouble(fieldArray[i].getValue().toString()));
 
                     _visualizationState.setLinkUtilizationColor(linkUtilizationColor);
 
@@ -188,8 +186,8 @@ public final class LinkStyleSelector extends JDialog implements ActionListener
                 linkUtilizationColor.addAll(VisualizationConstants.DEFAULT_LINKCOLORINGUTILIZATIONTHRESHOLDS);
                 for (int i = 0; i < linkUtilizationColor.size(); i++)
                 {
-                    fieldArray[i].setText("" + linkUtilizationColor.get(i));
-                    fieldArray[i].setBackground(Color.WHITE);
+                    fieldArray[i].setValue(linkUtilizationColor.get(i));
+                    fieldArray[i].setColor(Color.WHITE);
                 }
             }
         });
@@ -206,7 +204,7 @@ public final class LinkStyleSelector extends JDialog implements ActionListener
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.insets = new Insets(0, 5, 5, 5);
-        gbc.gridwidth = 1;
+        gbc.gridwidth = 2;
         pane.add(new JLabel("Color"), gbc);
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         pane.add(new JLabel("Utilization (%)"), gbc);

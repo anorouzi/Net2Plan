@@ -1,20 +1,13 @@
-//- AÑADIR TESTS PARA PD [faltan de restrict PD]
-//- AÑADIR A CHECKCONSISTENCY Y REPETIR TESTS
-//- CAMBIO DE PLANNING DOMAIN DE ELEMENTOS YA HAYA SE PUEDA HACER (TODOS A LA VEZ)
-//- SE PUEDA RESTRICT TO PLANNING DOMAIN DESPUES (SE COGE LO QUE HAY EN LOS MAPAS Y YA ESTÁ)
-//- HACER MÁS RAPIDO LO DE LAS TABLAS
-
 /*******************************************************************************
- * 
+ * Copyright (c) 2017 Pablo Pavon Marino and others.
  * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser Public License v2.1
+ * are made available under the terms of the 2-clause BSD License 
  * which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
+ * https://opensource.org/licenses/BSD-2-Clause
  *
  * Contributors:
- *     Pablo Pavon-Marino - Jose-Luis Izquierdo-Zaragoza, up to version 0.3.1
- *     Pablo Pavon-Marino - from version 0.4.0 onwards
- ******************************************************************************/
+ *     Pablo Pavon Marino and others - initial API and implementation
+ *******************************************************************************/
 
 package com.net2plan.interfaces.networkDesign;
 
@@ -136,7 +129,7 @@ public class NetPlan extends NetworkElement
     final static String TEMPLATE_ROUTE_NOT_ALL_LINKS_SAME_LAYER = "Not all of the links of the route belong to the same layer";
     final static String TEMPLATE_MULTICASTTREE_NOT_ALL_LINKS_SAME_LAYER = "Not all of the links of the multicast tree belong to the same layer";
     final static String UNMODIFIABLE_EXCEPTION_STRING = "Unmodifiable NetState object - can't be changed";
-    final static String KEY_STRING_BIDIRECTIONALCOUPLE = "bidirectionalCouple";
+//    final static String KEY_STRING_BIDIRECTIONALCOUPLE = "bidirectionalCouple";
 
     RoutingType DEFAULT_ROUTING_TYPE = RoutingType.SOURCE_ROUTING;
     boolean isModifiable;
@@ -529,8 +522,8 @@ public class NetPlan extends NetworkElement
 
         Demand d1 = addDemand(ingressNode, egressNode, offeredTraffic, attributes, layer);
         Demand d2 = addDemand(egressNode, ingressNode, offeredTraffic, attributes, layer);
-        d1.setAttribute(KEY_STRING_BIDIRECTIONALCOUPLE, "" + d2.id);
-        d2.setAttribute(KEY_STRING_BIDIRECTIONALCOUPLE, "" + d1.id);
+        d1.bidirectionalPair = d2;
+        d2.bidirectionalPair = d1;
         if (ErrorHandling.isDebugEnabled()) this.checkCachesConsistency();
         return Pair.of(d1, d2);
     }
@@ -721,8 +714,8 @@ public class NetPlan extends NetworkElement
 
         Link link1 = addLink(originNode, destinationNode, capacity, lengthInKm, propagationSpeedInKmPerSecond, attributes, layer);
         Link link2 = addLink(destinationNode, originNode, capacity, lengthInKm, propagationSpeedInKmPerSecond, attributes, layer);
-        link1.setAttribute(KEY_STRING_BIDIRECTIONALCOUPLE, "" + link2.id);
-        link2.setAttribute(KEY_STRING_BIDIRECTIONALCOUPLE, "" + link1.id);
+        link1.bidirectionalPair = link2;
+        link2.bidirectionalPair = link1;
 
         if (ErrorHandling.isDebugEnabled()) this.checkCachesConsistency();
 
@@ -1922,7 +1915,8 @@ public class NetPlan extends NetworkElement
      * design, and all the elements in the other design are added to this.  
      * This operation is idempotent: merging x with x is x, merging x with y and again with y, is 
      * the same as merging x with y just once
-     * @param other
+     *
+     * @param otherDesign
      * @return this (for convenience only)
      */
     public NetPlan mergeIntoThisDesign (NetPlan otherDesign)
@@ -2173,9 +2167,8 @@ public class NetPlan extends NetworkElement
      * in the given layer, and those that would carry its traffic, are kept. Then, the resulting design has the 
      * same connected components than the original graph.
      * @param selectedNodes the selected nodes
-     * @param trafficLayer see above
-     * @param keepConnectivitySets see above
-     * @return this 
+     *
+     * @return this
      */
     public NetPlan restrictDesign (Set<Node> selectedNodes)
     {
@@ -3219,16 +3212,9 @@ public class NetPlan extends NetworkElement
         DoubleMatrix2D out = DoubleFactory2D.sparse.make(E, E);
         for (Link e_1 : layer.links)
         {
-            final String idBidirPair_st = e_1.getAttribute(KEY_STRING_BIDIRECTIONALCOUPLE);
-            if (idBidirPair_st == null)
-                throw new Net2PlanException("Some links are not bidirectional. Use this method for networks created using addLinkBidirectional");
-            final long idBidirPair = Long.parseLong(idBidirPair_st);
-            final Link linkPair = netPlan.getLinkFromId(idBidirPair);
-            if (linkPair == null) throw new Net2PlanException("Some links are not bidirectional.");
-            if ((linkPair.getOriginNode() != e_1.getDestinationNode()) || (linkPair.getDestinationNode() != e_1.getOriginNode()))
-                throw new Net2PlanException("Some links are not bidirectional.");
-            out.set(e_1.getIndex(), linkPair.getIndex(), 1.0);
-            out.set(linkPair.getIndex(), e_1.getIndex(), 1.0);
+        	if (!e_1.isBidirectional()) throw new Net2PlanException("Some links are not bidirectional.");
+            out.set(e_1.getIndex(), e_1.getBidirectionalPair().getIndex(), 1.0);
+            out.set(e_1.getBidirectionalPair().getIndex(), e_1.getIndex(), 1.0);
         }
         return out;
     }
@@ -6048,6 +6034,7 @@ public class NetPlan extends NetworkElement
                     writer.writeAttribute("destinationNodeId", Long.toString(link.destinationNode.id));
                     writer.writeAttribute("capacity", Double.toString(link.capacity));
                     writer.writeAttribute("lengthInKm", Double.toString(link.lengthInKm));
+                    writer.writeAttribute("bidirectionalPairId", Long.toString(link.bidirectionalPair == null? -1 : link.bidirectionalPair.id));
                     writer.writeAttribute("propagationSpeedInKmPerSecond", Double.toString(link.propagationSpeedInKmPerSecond));
                     writer.writeAttribute("isUp", Boolean.toString(link.isUp));
 
@@ -6075,6 +6062,7 @@ public class NetPlan extends NetworkElement
                     writer.writeAttribute("egressNodeId", Long.toString(demand.egressNode.id));
                     writer.writeAttribute("offeredTraffic", Double.toString(demand.offeredTraffic));
                     writer.writeAttribute("intendedRecoveryType", demand.recoveryType.toString());
+                    writer.writeAttribute("bidirectionalPairId", Long.toString(demand.bidirectionalPair == null? -1 : demand.bidirectionalPair.id));
 
                     for (String type : demand.mandatorySequenceOfTraversedResourceTypes)
                     {

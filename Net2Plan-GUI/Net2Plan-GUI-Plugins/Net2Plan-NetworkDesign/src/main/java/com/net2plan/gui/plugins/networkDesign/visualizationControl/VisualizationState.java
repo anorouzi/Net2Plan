@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2017 Pablo Pavon Marino and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the 2-clause BSD License 
+ * which accompanies this distribution, and is available at
+ * https://opensource.org/licenses/BSD-2-Clause
+ *
+ * Contributors:
+ *     Pablo Pavon Marino and others - initial API and implementation
+ *******************************************************************************/
 package com.net2plan.gui.plugins.networkDesign.visualizationControl;
 
 import com.google.common.collect.Sets;
@@ -47,7 +57,7 @@ public class VisualizationState
     private boolean isActiveLinkUtilizationColorThresholdList;
     private boolean isActiveLinkRunoutTimeColorThresholdList;
     private boolean isActiveLinkCapacityThicknessThresholdList;
-    
+
     private float linkWidthIncreaseFactorRespectToDefault;
     private float nodeSizeFactorRespectToDefault;
 
@@ -100,6 +110,11 @@ public class VisualizationState
         this.pickManager = new PickManager(this);
 
         this.setCanvasLayerVisibilityAndOrder(currentNp, mapLayer2VisualizationOrder, layerVisibilityMap);
+    }
+
+    private void prepare()
+    {
+
     }
 
     public boolean isWhatIfAnalysisActive()
@@ -753,7 +768,7 @@ public class VisualizationState
 
     public List<NetworkLayer> getCanvasLayersInVisualizationOrder(boolean includeNonVisible)
     {
-        BidiMap<Integer, NetworkLayer> map = includeNonVisible ? new DualHashBidiMap<>(MapUtils.invertMap(visualizationSnapshot.getMapCanvasLayerVisualizationOrder())) : cache_mapCanvasVisibleLayer2VisualizationOrderRemovingNonVisible.inverseBidiMap();
+        Map<Integer, NetworkLayer> map = includeNonVisible ? MapUtils.invertMap(visualizationSnapshot.getMapCanvasLayerVisualizationOrder()) : cache_mapCanvasVisibleLayer2VisualizationOrderRemovingNonVisible.inverseBidiMap();
         List<NetworkLayer> res = new ArrayList<>();
         for (int vIndex = 0; vIndex < this.getNetPlan().getNumberOfLayers(); vIndex++)
             res.add(map.get(vIndex));
@@ -811,17 +826,17 @@ public class VisualizationState
     {
         return linkUtilizationColorThresholdList;
     }
-    
+
     public List<Double> getLinkRunoutTimeColor()
     {
         return linkRunoutTimeColorThresholdList;
     }
-    
+
     public List<Double> getLinkCapacityThickness()
     {
         return linkCapacityThicknessThresholdList;
     }
-        
+
     public void setIsActiveLinkUtilizationColorThresholdList(boolean isActive) { this.isActiveLinkUtilizationColorThresholdList = isActive; }
     public void setIsActiveLinkRunoutTimeColorThresholdList(boolean isActive) { this.isActiveLinkRunoutTimeColorThresholdList = isActive; }
     public void setIsActiveLinkCapacityThicknessThresholdList(boolean isActive) { this.isActiveLinkCapacityThicknessThresholdList = isActive; }
@@ -833,7 +848,7 @@ public class VisualizationState
     {
         this.linkUtilizationColorThresholdList = linkUtilizationColorList;
     }
-    
+
     public void setLinkRunoutTimeColor(List<Double> linkRunoutTimeColor)
     {
         this.linkRunoutTimeColorThresholdList = linkRunoutTimeColor;
@@ -845,11 +860,11 @@ public class VisualizationState
     public Color getLinkColorAccordingToUtilization (double linkUtilization)
     {
         linkUtilization*=100;
-        
+
         for(int i = 0; i < this.linkUtilizationColorThresholdList.size(); i++)
             if(linkUtilization < this.linkUtilizationColorThresholdList.get(i))
-                return VisualizationConstants.DEFAULT_LINKCOLORSPERUTILIZATIONANDRUNOUT.get(i);    
-        
+                return VisualizationConstants.DEFAULT_LINKCOLORSPERUTILIZATIONANDRUNOUT.get(i);
+
         return VisualizationConstants.DEFAULT_LINKCOLORSPERUTILIZATIONANDRUNOUT.get(this.linkUtilizationColorThresholdList.size());
     }
     public double getLinkRelativeThicknessAccordingToCapacity (double linkCapacity)
@@ -858,7 +873,7 @@ public class VisualizationState
             if(linkCapacity < this.linkCapacityThicknessThresholdList.get(i)) return VisualizationConstants.DEFAULT_LINKRELATIVETHICKNESSVALUES.get(i);
         return VisualizationConstants.DEFAULT_LINKRELATIVETHICKNESSVALUES.get(this.linkCapacityThicknessThresholdList.size());
     }
-    
+
     /**
      * @param showUpperLayerPropagation the showUpperLayerPropagation to set
      */

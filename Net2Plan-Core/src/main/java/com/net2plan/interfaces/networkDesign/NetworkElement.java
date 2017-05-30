@@ -1,29 +1,21 @@
 /*******************************************************************************
- * Copyright (c) 2016 Pablo Pavon-Marino.
+ * Copyright (c) 2017 Pablo Pavon Marino and others.
  * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser Public License v2.1
+ * are made available under the terms of the 2-clause BSD License 
  * which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
+ * https://opensource.org/licenses/BSD-2-Clause
  *
  * Contributors:
- *     Pablo Pavon-Marino - Jose-Luis Izquierdo-Zaragoza, up to version 0.3.1
- *     Pablo Pavon-Marino - from version 0.4.0 onwards
- ******************************************************************************/
+ *     Pablo Pavon Marino and others - initial API and implementation
+ *******************************************************************************/
 
 package com.net2plan.interfaces.networkDesign;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import com.net2plan.internal.AttributeMap;
-
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import com.net2plan.internal.AttributeMap;
+
+import java.util.*;
 
 /**
  * <p>Class defining a generic network element.</p>
@@ -183,7 +175,6 @@ public abstract class NetworkElement
 		if (val == null) return defaultValue;  
 		try 
 		{
-			System.out.println(val);
 			final String [] parts = val.split(MATRIX_COLSEPARATOR,-1);
 			final List<Double> res = new ArrayList<> (parts.length);
 			for (String part : parts)
@@ -206,7 +197,6 @@ public abstract class NetworkElement
 		checkAttachedToNetPlanObject();
 		final String val = attributes.get(key);
 		if (val == null) return defaultValue;  
-		System.out.println("To parse: **" + val + "**");
 		try 
 		{
 			final String [] parts = val.split(MATRIX_COLSEPARATOR,-1);
@@ -394,9 +384,10 @@ public abstract class NetworkElement
 
 	/**
 	 * Sets an attribute for this element, storing the values of the given value list, so it can be read with getAttributeAsStringList method. 
-	 * If it already exists, previous value is lost.  
+	 * If it already exists, previous value is lost.
+	 *
 	 * @param key Attribute name
-	 * @param value Attribute vals
+	 * @param vals Attribute vals
 	 */
 	public void setAttributeAsStringList (String key, List<String> vals)
 	{
@@ -410,7 +401,6 @@ public abstract class NetworkElement
 			if (firstTime) { firstTime = false; } else { st.append(MATRIX_COLSEPARATOR); }
 			st.append(escapedStringToWrite(val)); 
 		}
-		System.out.println("From :" + vals + " to **" + st.toString() + "**");
 		attributes.put (key,st.toString());
 	}
 
@@ -419,7 +409,7 @@ public abstract class NetworkElement
 	 * so it can be read with getAttributeAsStringMatrix method. 
 	 * If it already exists, previous value is lost.  
 	 * @param key Attribute name
-	 * @param value Attribute vals
+	 * @param vals Attribute vals
 	 */
 	public void setAttributeAsStringMatrix (String key, List<List<String>> vals)
 	{
@@ -446,7 +436,7 @@ public abstract class NetworkElement
 	 * Sets an attribute for this element, storing the values of the given matrix, so it can be read with setAttributeAsNumberMatrix method.
 	 * If it already exists, previous value is lost. 
 	 * @param key Attribute name
-	 * @param value Attribute vals
+	 * @param vals Attribute vals
 	 */
 	public void setAttributeAsNumberMatrix (String key, DoubleMatrix2D vals)
 	{
@@ -521,7 +511,6 @@ public abstract class NetworkElement
 		String res = s.replaceAll(STRINGESCAPECHARACTER , STRINGESCAPECHARACTER + AFTERSCAPE_ESCAPE);
 		res = res.replaceAll(MATRIX_COLSEPARATOR , STRINGESCAPECHARACTER + AFTERSCAPE_COLSEP);
 		res = res.replaceAll(MATRIX_ROWSEPARATOR , STRINGESCAPECHARACTER + AFTERSCAPE_ROWSEP);
-		System.out.println("Escape: **" + s + "** --> **" + res + "**");
 		return res;
 	}
 	private static String unescapedStringRead (String s)
@@ -529,7 +518,6 @@ public abstract class NetworkElement
 		String res = s.replaceAll(STRINGESCAPECHARACTER + AFTERSCAPE_COLSEP, MATRIX_COLSEPARATOR);
 		res = res.replaceAll(STRINGESCAPECHARACTER + AFTERSCAPE_ROWSEP, MATRIX_ROWSEPARATOR);
 		res = res.replaceAll(STRINGESCAPECHARACTER + AFTERSCAPE_ESCAPE, STRINGESCAPECHARACTER);
-		System.out.println("Unescape: **" + s + "** --> **" + res + "**");
 		return res;
 	}
 	
