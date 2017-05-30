@@ -14,12 +14,13 @@ import com.net2plan.gui.utils.AdvancedJTable;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.apache.commons.lang.ArrayUtils;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import javax.swing.table.DefaultTableModel;
 
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -29,26 +30,30 @@ import static org.junit.Assert.assertTrue;
 @RunWith(JUnitParamsRunner.class)
 public class TableSearcherTest
 {
+    private static AdvancedJTable table = new AdvancedJTable();
+    private static final Object[][] dataVector = new Object[][]
+            {
+                    {"A", "M", "Z"},
+                    {"B", "O", "Y"},
+                    {"C", "O", "Z"}
+            };
+
+    @BeforeClass
+    public static void setUp()
+    {
+        AdvancedJTable table = new AdvancedJTable(new DefaultTableModel());
+        ((DefaultTableModel) table.getModel()).setDataVector(dataVector, dataVector[0]);
+    }
+
     @Test
     @Parameters({"A", "Z", "O"})
-    @Ignore
     public void searchForItemTest(String searchItem)
     {
-        AdvancedJTable table = new AdvancedJTable();
-        table.setModel(new DefaultTableModel());
-
-        final Object[][] dataVector = new Object[][]
-                {
-                        {"A", "M", "Z"},
-                        {"B", "O", "Y"},
-                        {"C", "O", "Z"}
-                };
-        ((DefaultTableModel) table.getModel()).setDataVector(dataVector, dataVector[0]);
-
         TableSearcher searcher = new TableSearcher(table);
+
         final int[] rowIndex = searcher.lookFor(searchItem);
 
-        assertNotNull(rowIndex);
+        assertThat(rowIndex).isNotNull();
 
         for (int i : rowIndex)
             assertTrue(ArrayUtils.contains(dataVector[i], searchItem));
